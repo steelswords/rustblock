@@ -31,6 +31,7 @@ pub struct BlockProfile {
     pub macs: Vec<String>,
     pub always_block: Vec<String>,
     pub intermittent_block: Vec<IntermittentBlockDefinition>,
+    pub blackout_times: Vec<BlackoutTime>,
 }
 
 #[derive(Deserialize, Debug)]
