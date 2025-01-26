@@ -14,19 +14,21 @@ intermittent_block = [
     { host = "reddit.com", length = "15min" }
       host = "youtube.com", length = "45min", day_total = "2h" }
     ]
-block_times = {
-    name = "Go to sleep",
-    start = "11:00 pm",
-    end = "6:30 am",
-    exceptions = [ "websites.wikipedia", "audible.com" ]
-}
+blackout_times = [
+    {
+        name = "Go to sleep",
+        start = "11:00 pm",
+        end = "6:30 am",
+        exceptions = [ "websites.wikipedia", "audible.com" ]
+    }
+]
 
 
 [websites.facebook.com]
-alias_domains = [ "content.facebook.com", "www.facebook.com", "facebook.com" ]
+domains = [ "content.facebook.com", "www.facebook.com", "facebook.com" ]
 
 [websites.wikipedia]
-alias_domains = [ "es.wikipedia.org", "la.wikipedia.org", "en.wikipedia.org" ]
+domains = [ "es.wikipedia.org", "la.wikipedia.org", "en.wikipedia.org" ]
 ```
 
 # API

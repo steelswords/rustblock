@@ -1,0 +1,22 @@
+[blockprofiles.userA]
+macs = [ "aa:bb:cc:dd:ee:ff", "12:34:54:67:89:ab" ]
+always_block = ["facebook.com", "yahoo.com" ]
+intermittent_block = [ 
+    { host = "reddit.com", minutes_on = 15 },
+    { host = "youtube.com", minutes_on = 45, day_total = 120 }
+    ]
+blackout_times = [
+    #{
+    #    name = "Go to sleep",
+    #    start = "11:00 pm",
+    #    end = "6:30 am",
+    #    exceptions = [ "websites.wikipedia", "audible.com" ]
+    #}
+]
+
+
+[websites."facebook.com"]
+domains = [ "content.facebook.com", "www.facebook.com", "facebook.com" ]
+
+[websites.wikipedia]
+domains = [ "es.wikipedia.org", "la.wikipedia.org", "en.wikipedia.org" ]
