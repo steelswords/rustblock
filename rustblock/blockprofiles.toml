@@ -1,5 +1,5 @@
 [blockprofiles.userA]
-macs = [ "aa:bb:cc:dd:ee:ff", "12:34:54:67:89:ab" ]
+user_device_hosts = [ "desktop", "laptop", "phone" ]
 always_block = ["facebook.com", "yahoo.com" ]
 intermittent_block = [ 
     { host = "reddit.com", minutes_on = 15 },

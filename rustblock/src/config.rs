@@ -1,6 +1,6 @@
 use serde::Deserialize;
-use toml;
 use std::collections::HashMap;
+use iptables;
 
 
 //#[derive(Deserialize, Debug)]
@@ -28,7 +28,7 @@ pub struct BlackoutTime {
 
 #[derive(Deserialize, Debug)]
 pub struct BlockProfile {
-    pub macs: Vec<String>,
+    pub user_device_hosts: Vec<String>,
     pub always_block: Vec<String>,
     pub intermittent_block: Vec<IntermittentBlockDefinition>,
     pub blackout_times: Vec<BlackoutTime>,
