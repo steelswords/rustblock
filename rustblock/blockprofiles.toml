@@ -1,5 +1,5 @@
 [blockprofiles.userA]
-user_device_hosts = [ "desktop", "laptop", "phone" ]
+user_device_hosts = [ "192.168.0.73", "192.168.0.121" ]
 always_block = ["facebook.com", "yahoo.com" ]
 intermittent_block = [ 
     { host = "reddit.com", minutes_on = 15 },

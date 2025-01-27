@@ -20,7 +20,7 @@ fn main() -> Result<(), std::io::Error> {
 
     for (profile_name, profile_data) in config_options.blockprofiles.iter() {
         println!("I see a profile named {}. It would implement the following blocks:", profile_name);
-        
+
         let rules_list = get_rules_from_profile(profile_data, &config_options);
         rules_list.iter().for_each(|(src, dst)| println!("\t Block from {} -> {}", src, dst));
     }
@@ -59,7 +59,7 @@ fn get_blocked_destination_ip_addresses_from_profile(profile: &config::BlockProf
     result_vec
 }
 
-fn get_blocked_source_ip_addresses_from_profile(profile: &config::BlockProfile, config_options: &ConfigOptions) -> Vec<String> {
+fn get_blocked_source_ip_addresses_from_profile(profile: &config::BlockProfile) -> Vec<String> {
     let mut result_vec = vec![];
     // Gather list of user device IPs
     for user_device_host in profile.user_device_hosts.iter() {
@@ -81,7 +81,7 @@ fn get_blocked_source_ip_addresses_from_profile(profile: &config::BlockProfile, 
                             .collect::<Vec<String>>()
                     );
                 },
-                Err(e) => eprintln!("ERROR: Could not resolve host {}", user_device_host)
+                Err(e) => eprintln!("ERROR: Could not resolve host {}: {}", user_device_host, e),
             };
         }
     }
@@ -93,7 +93,7 @@ fn get_blocked_source_ip_addresses_from_profile(profile: &config::BlockProfile, 
 /// src and dst define a connection that must be blocked by the firewall rules.
 fn get_rules_from_profile(profile: &config::BlockProfile, config_options: &ConfigOptions) -> Vec<(String, String)> {
     // Compute list of blocked source IP addresses, i.e. the user's devices.
-    let blocked_from_ips: Vec<String> = get_blocked_source_ip_addresses_from_profile(profile, config_options);
+    let blocked_from_ips: Vec<String> = get_blocked_source_ip_addresses_from_profile(profile);
 
     // Compute list of blocked desitnation IP addresses
     let blocked_to_ips: Vec<String> = get_blocked_destination_ip_addresses_from_profile(profile, config_options);
