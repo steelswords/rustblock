@@ -1,8 +1,32 @@
 use std::{fs::read_to_string, net::{IpAddr, Ipv4Addr}};
 use std::str::FromStr;
-use config::{ConfigOptions, WebsiteAddressTable};
+use config::{BlockProfile, ConfigOptions, WebsiteAddressTable};
 use dns_lookup::lookup_host;
+use clap::{Args, Parser, Subcommand};
 mod config;
+
+
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+struct CliArgs {
+    #[command(subcommand)]
+    command: CliCommands,
+}
+
+#[derive(Subcommand)]
+enum CliCommands {
+    Enable(CliCommandsProfileArgs),
+
+    Disable(CliCommandsProfileArgs),
+
+    List { },
+}
+
+#[derive(Args)]
+struct CliCommandsProfileArgs {
+    profile_name: String,
+}
+
 
 fn read_config() -> ConfigOptions {
     let config_file_string = read_to_string(config::get_config_file_name())
@@ -18,20 +42,48 @@ fn read_config() -> ConfigOptions {
     config_options
 }
 
+fn print_profile(name: &String, profile: &BlockProfile, config_options: &ConfigOptions) {
+        let rules_list = get_rules_from_profile(profile, config_options);
+
+        println!("-----------------------------------------\n");
+        println!(" Profile {}\n", name);
+        rules_list.iter().for_each(|(src, dst)| println!("\t Block from {} -> {}", src, dst));
+        println!("-----------------------------------------\n");
+}
+
+fn list_profiles(config_options: &ConfigOptions) {
+    for (profile_name, profile_data) in config_options.blockprofiles.iter() {
+        print_profile(profile_name, profile_data, config_options);
+    }
+}
 
 fn main() -> Result<(), std::io::Error> {
     let config_options = read_config();
 
-    for (website_name, website_aliases) in config_options.websites.iter() {
-        println!(" Website {} has the following aliases: {:?}", website_name, website_aliases.addresses);
+    let cli = CliArgs::parse();
+
+    match cli.command {
+        CliCommands::Enable(profile) => {
+            if let Some(profile_name) = config_options.blockprofiles.get(&profile.profile_name) {
+                enable_profile(profile_name).unwrap();
+            }
+            else {
+                eprintln!("ERROR: Could not find profile {}", profile.profile_name);
+                panic!();
+            }
+        },
+        CliCommands::Disable(profile) => {
+            println!("disable not supported yet. Can't disable profile {}", profile.profile_name);
+            panic!();
+        },
+        CliCommands::List {} => { list_profiles(&config_options); },
+
+        _ => panic!("Not supported"),
     }
 
-    for (profile_name, profile_data) in config_options.blockprofiles.iter() {
-        println!("I see a profile named {}. It would implement the following blocks:", profile_name);
-
-        let rules_list = get_rules_from_profile(profile_data, &config_options);
-        rules_list.iter().for_each(|(src, dst)| println!("\t Block from {} -> {}", src, dst));
-    }
+    //for (website_name, website_aliases) in config_options.websites.iter() {
+    //    println!(" Website {} has the following aliases: {:?}", website_name, website_aliases.addresses);
+    //}
 
     Ok(())
 }
@@ -123,7 +175,8 @@ fn get_rules_from_profile(profile: &config::BlockProfile, config_options: &Confi
 }
 
 fn enable_profile(profile: &config::BlockProfile) -> Result<(), Box<dyn std::error::Error>> {
-
+    println!("Enabling profile {:?}", profile);
+    println!("Jk, not implemented yet.");
     Ok(())
 }
 
