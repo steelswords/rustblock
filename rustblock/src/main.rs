@@ -1,6 +1,6 @@
 use std::{fs::read_to_string, net::{IpAddr, Ipv4Addr}};
 use std::str::FromStr;
-use config::{BlockProfile, ConfigOptions, WebsiteAddressTable};
+use config::{get_config_file_name, BlockProfile, ConfigOptions, WebsiteAddressTable};
 use dns_lookup::lookup_host;
 use clap::{Args, Parser, Subcommand};
 mod config;
@@ -27,21 +27,6 @@ struct CliCommandsProfileArgs {
     profile_name: String,
 }
 
-
-fn read_config() -> ConfigOptions {
-    let config_file_string = read_to_string(config::get_config_file_name())
-        .expect("Could not open config file at /jffs/blockprofiles.toml. Exiting.");
-    let mut config_options: config::ConfigOptions = toml::from_str(&config_file_string)
-        .expect("Error in config file.");
-
-    let websites_address_table: WebsiteAddressTable = toml::from_str(
-        &read_to_string(&config_options.websites_toml).unwrap()
-    ).unwrap();
-
-    config_options.websites = websites_address_table.websites;
-    config_options
-}
-
 fn print_profile(name: &String, profile: &BlockProfile, config_options: &ConfigOptions) {
         let rules_list = get_rules_from_profile(profile, config_options);
 
@@ -58,14 +43,14 @@ fn list_profiles(config_options: &ConfigOptions) {
 }
 
 fn main() -> Result<(), std::io::Error> {
-    let config_options = read_config();
+    let config_options = ConfigOptions::new(&get_config_file_name());
 
     let cli = CliArgs::parse();
 
     match cli.command {
         CliCommands::Enable(profile) => {
             if let Some(profile_name) = config_options.blockprofiles.get(&profile.profile_name) {
-                enable_profile(profile_name).unwrap();
+                enable_profile(profile_name, &config_options).unwrap();
             }
             else {
                 eprintln!("ERROR: Could not find profile {}", profile.profile_name);
@@ -174,9 +159,34 @@ fn get_rules_from_profile(profile: &config::BlockProfile, config_options: &Confi
     return_vec
 }
 
-fn enable_profile(profile: &config::BlockProfile) -> Result<(), Box<dyn std::error::Error>> {
+fn enable_profile(profile: &config::BlockProfile, config_options: &ConfigOptions) -> Result<(), Box<dyn std::error::Error>> {
     println!("Enabling profile {:?}", profile);
-    println!("Jk, not implemented yet.");
+    let rules_list = get_rules_from_profile(profile, config_options);
+
+    let ipt = iptables::new(false).unwrap();
+
+    // If there is not a chain named 'rustblock.<thisprofile>', create it
+    let profile_chain_name = format!("rustblock.<{}>", profile.name);
+    if ipt.chain_exists("filter", profile_chain_name.as_str())? {
+        println!("INFO: iptables chain '{}' already exists.", &profile_chain_name);
+    }
+    else { // Create it
+        println!("Creating iptables chain '{}'", &profile_chain_name);
+        ipt.new_chain("filter", profile_chain_name.as_str())?;
+    }
+
+    // Add all the rules to the chain named 'rustblock.<thisprofile>' 
+    for (src, dst) in rules_list.iter() {
+        println!("Adding block from {} -> {}", src, dst);
+        let rule_string = format!("-s {} -d {} -j DROP", &src, &dst);
+        ipt.append_unique("filter", &profile_chain_name, &rule_string).unwrap();
+        //TODO: Will I need to LOG here or something to count bytes for intermediate accesses?
+
+        // TODO: This is a little inefficient in execution, but much more efficient
+        // for me as the programmer right now.
+        // If there is not a rule in the 'FORWARD' chain that checks this chain for each source IP, add it.
+        ipt.append_unique("filter", "FORWARD", format!("-s {} -j {}", src, &profile_chain_name).as_str()).unwrap();
+    }
     Ok(())
 }
 

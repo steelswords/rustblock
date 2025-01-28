@@ -1,6 +1,6 @@
 use serde::Deserialize;
-use std::collections::HashMap;
-use iptables;
+use std::{collections::HashMap, net::IpAddr};
+use std::fs::read_to_string;
 
 
 //#[derive(Deserialize, Debug)]
@@ -32,6 +32,16 @@ pub struct BlockProfile {
     pub always_block: Vec<String>,
     pub intermittent_block: Vec<IntermittentBlockDefinition>,
     pub blackout_times: Vec<BlackoutTime>,
+
+    #[serde(skip)]
+    pub user_device_ip_addresses: Vec<String>,
+
+    #[serde(skip)]
+    pub name: String,
+}
+
+fn get_default_block_profile_name() -> String {
+    String::from("defaultProfile")
 }
 
 #[derive(Deserialize, Debug)]
@@ -68,4 +78,24 @@ pub fn get_config_file_name() -> String {
 #[cfg(target_arch = "arm")]
 pub fn get_config_file_name() -> String {
     "/jffs/blockprofiles.toml".to_string()
+}
+
+impl ConfigOptions {
+    pub fn new(config_file_name: &str) -> Self {
+        let config_file_string = std::fs::read_to_string(config_file_name)
+            .expect("Could not open config file. Exiting.");
+        let mut config_options: ConfigOptions = toml::from_str(&config_file_string)
+            .expect("Error in config file.");
+
+        let websites_address_table: WebsiteAddressTable = toml::from_str(
+            &read_to_string(&config_options.websites_toml).unwrap()
+        ).unwrap();
+
+        config_options.websites = websites_address_table.websites;
+
+        config_options
+    }
+    pub fn init(&mut self) {
+
+    }
 }
