@@ -37,14 +37,27 @@ pub struct BlockProfile {
 #[derive(Deserialize, Debug)]
 pub struct ConfigOptions {
     pub blockprofiles: HashMap<String, BlockProfile>,
-    pub websites: HashMap<String, WebsiteDefinition>,
+
+    #[serde(default = "get_default_websites_toml_path")]
+    pub websites_toml: String,
+
+    #[serde(skip)]
+    pub websites: HashMap<String, WebsiteAddressTableEntry>,
+}
+
+fn get_default_websites_toml_path() -> String {
+    String::from("websites.toml")
 }
 
 #[derive(Deserialize, Debug)]
-pub struct WebsiteDefinition {
-    pub domains: Vec<String>,
+pub struct WebsiteAddressTable {
+    pub websites: HashMap<String, WebsiteAddressTableEntry>,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct WebsiteAddressTableEntry {
+    pub addresses: Vec<String>
+}
 
 
 #[cfg(target_arch = "x86_64")]

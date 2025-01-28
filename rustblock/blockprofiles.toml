@@ -1,3 +1,6 @@
+
+websites_toml = "websites.toml"
+
 [blockprofiles.userA]
 user_device_hosts = [ "192.168.0.73", "192.168.0.121" ]
 always_block = ["facebook.com", "yahoo.com" ]
@@ -13,10 +16,3 @@ blackout_times = [
     #    exceptions = [ "websites.wikipedia", "audible.com" ]
     #}
 ]
-
-
-[websites."facebook.com"]
-domains = [ "content.facebook.com", "www.facebook.com", "facebook.com" ]
-
-[websites.wikipedia]
-domains = [ "es.wikipedia.org", "la.wikipedia.org", "en.wikipedia.org" ]

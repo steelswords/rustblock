@@ -1,21 +1,29 @@
 use std::{fs::read_to_string, net::{IpAddr, Ipv4Addr}};
 use std::str::FromStr;
-use config::ConfigOptions;
+use config::{ConfigOptions, WebsiteAddressTable};
 use dns_lookup::lookup_host;
 mod config;
 
+fn read_config() -> ConfigOptions {
+    let config_file_string = read_to_string(config::get_config_file_name())
+        .expect("Could not open config file at /jffs/blockprofiles.toml. Exiting.");
+    let mut config_options: config::ConfigOptions = toml::from_str(&config_file_string)
+        .expect("Error in config file.");
+
+    let websites_address_table: WebsiteAddressTable = toml::from_str(
+        &read_to_string(&config_options.websites_toml).unwrap()
+    ).unwrap();
+
+    config_options.websites = websites_address_table.websites;
+    config_options
+}
+
+
 fn main() -> Result<(), std::io::Error> {
-    println!("Hello, world!");
-
-
-
-    let config_file_string = read_to_string(config::get_config_file_name()).expect("Could not open config file at /jffs/blockprofiles.toml. Exiting.");
-    let config_options: config::ConfigOptions = toml::from_str(&config_file_string).expect("Error in config file.");
+    let config_options = read_config();
 
     for (website_name, website_aliases) in config_options.websites.iter() {
-        print!(" Website {} has the following aliases: ", website_name);
-        website_aliases.domains.iter().for_each(|d| print!(" {} ", d));
-        println!();
+        println!(" Website {} has the following aliases: {:?}", website_name, website_aliases.addresses);
     }
 
     for (profile_name, profile_data) in config_options.blockprofiles.iter() {
@@ -25,31 +33,34 @@ fn main() -> Result<(), std::io::Error> {
         rules_list.iter().for_each(|(src, dst)| println!("\t Block from {} -> {}", src, dst));
     }
 
-
-
     Ok(())
 }
 
+// TODO: Redo
 fn get_blocked_destination_ip_addresses_from_profile(profile: &config::BlockProfile, config_options: &ConfigOptions) -> Vec<String> {
     let mut result_vec = vec![];
 
     for blocked_site in profile.always_block.iter() {
         if let Some(blocked_domain_aliases) = config_options.websites.get(blocked_site) {
-            for domain in blocked_domain_aliases.domains.iter() {
-                // Get IP address of domain, add to list
-                match lookup_host(domain) {
-                    Ok(ip_addresses) => {
-                        // Convert all the IpAddrs to Strings and append that vec to the result_vec
-                        result_vec.append(
-                            &mut ip_addresses
-                            .iter()
-                            .map(|i| i.to_string())
-                            .collect::<Vec<String>>()
-                        );
-                    },
-                    Err(e) => eprintln!("Could not resolve IP address for {}: {}", domain, e)
-                };
-            }
+            // Since we're already forcing IP addresses now, this gets a lot shorter.
+            blocked_domain_aliases.addresses
+                .iter()
+                .for_each(|address| result_vec.push(address.clone()));
+            //for domain in blocked_domain_aliases.addresses.iter() {
+            //    // Get IP address of domain, add to list
+            //    match lookup_host(domain) {
+            //        Ok(ip_addresses) => {
+            //            // Convert all the IpAddrs to Strings and append that vec to the result_vec
+            //            result_vec.append(
+            //                &mut ip_addresses
+            //                .iter()
+            //                .map(|i| i.to_string())
+            //                .collect::<Vec<String>>()
+            //            );
+            //        },
+            //        Err(e) => eprintln!("Could not resolve IP address for {}: {}", domain, e)
+            //    };
+            //}
         }
         else {
             eprintln!("ERROR: Could not find a websites definition for {}", blocked_site);
@@ -69,6 +80,9 @@ fn get_blocked_source_ip_addresses_from_profile(profile: &config::BlockProfile) 
             result_vec.push(ip_address.to_string());
         }
         // Otherwise, resolve it to an IP address
+        // TODO: There is a hole in this logic with my current dns setup where if a 
+        // device is not online, it doesn't resolve to anything.... Maybe need to
+        // reserve addresses or force using IP addresses.
         else {
             match lookup_host(user_device_host) {
                 Ok(ip_addresses) => {
@@ -112,8 +126,6 @@ fn enable_profile(profile: &config::BlockProfile) -> Result<(), Box<dyn std::err
 
     Ok(())
 }
-
-
 
 #[cfg(test)]
 mod tests {
