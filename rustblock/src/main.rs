@@ -192,7 +192,7 @@ fn enable_profile(profile: &config::BlockProfile, config_options: &ConfigOptions
         // for me as the programmer right now.
         // If there is not a rule in the 'FORWARD' chain that checks this chain for each source IP, add it.
         if last_src != src.to_string() {
-            match ipt.append_unique("filter", "FORWARD", format!("-s {} -j {}", src, &profile_chain_name).as_str()) {
+            match ipt.insert_unique("filter", "FORWARD", format!("-s {} -j {}", src, &profile_chain_name).as_str(), 1) {
                 Ok(_) => println!("\tWas able to add new chain."),
                 Err(e) => eprintln!("\tCould not add chain: {}", e),
             }
