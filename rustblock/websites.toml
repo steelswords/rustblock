@@ -3,3 +3,8 @@ addresses = [
     "54.144.104.1",
     "57.144.104.128"
 ]
+
+[websites.reddit]
+addresses = [
+    "146.75.93.140",
+]

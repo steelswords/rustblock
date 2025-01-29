@@ -17,4 +17,7 @@ trap "echo 'An error occurred! Quitting mid-script!'" ERR
 
 cross build --target armv7-unknown-linux-musleabi --release
 
-scp -O ./target/armv7-unknown-linux-musleabi/release/rustblock router:/jffs
+scp -O ./target/armv7-unknown-linux-musleabi/release/rustblock \
+    ./websites.toml \
+    ./blockprofiles.toml \
+    router:/jffs

@@ -159,6 +159,7 @@ fn get_rules_from_profile(profile: &config::BlockProfile, config_options: &Confi
     return_vec
 }
 
+#[cfg(target_arch = "arm")]
 fn enable_profile(profile: &config::BlockProfile, config_options: &ConfigOptions) -> Result<(), Box<dyn std::error::Error>> {
     println!("Enabling profile {:?}", profile);
     let rules_list = get_rules_from_profile(profile, config_options);
@@ -187,6 +188,17 @@ fn enable_profile(profile: &config::BlockProfile, config_options: &ConfigOptions
         // If there is not a rule in the 'FORWARD' chain that checks this chain for each source IP, add it.
         ipt.append_unique("filter", "FORWARD", format!("-s {} -j {}", src, &profile_chain_name).as_str()).unwrap();
     }
+    Ok(())
+}
+
+#[cfg(target_arch = "x86_64")]
+fn enable_profile(profile: &config::BlockProfile, config_options: &ConfigOptions) -> Result<(), Box<dyn std::error::Error>> {
+    let rules_list = get_rules_from_profile(profile, config_options);
+    rules_list
+        .iter()
+        .for_each(|(src, dst)| 
+            println!("Adding block from {} -> {}", src, dst)
+        );
     Ok(())
 }
 

@@ -3,7 +3,7 @@ websites_toml = "websites.toml"
 
 [blockprofiles.userA]
 user_device_hosts = [ "192.168.0.73", "192.168.0.121" ]
-always_block = ["facebook.com", "yahoo.com" ]
+always_block = ["facebook.com", "reddit" ]
 intermittent_block = [ 
     { host = "reddit.com", minutes_on = 15 },
     { host = "youtube.com", minutes_on = 45, day_total = 120 }

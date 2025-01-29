@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.5.27", features = ["derive"] }
 dns-lookup = "2.0.4"
-iptables = "0.5.2"
+iptables = { git = "https://github.com/steelswords/rust-iptables.git" }
 serde = { version = "1.0.217", features = ["derive"] }
 toml = "0.8.19"
 
