@@ -177,16 +177,27 @@ fn enable_profile(profile: &config::BlockProfile, config_options: &ConfigOptions
     }
 
     // Add all the rules to the chain named 'rustblock.<thisprofile>' 
+    let mut last_src = String::from("");
     for (src, dst) in rules_list.iter() {
         println!("Adding block from {} -> {}", src, dst);
         let rule_string = format!("-s {} -d {} -j DROP", &src, &dst);
-        ipt.append_unique("filter", &profile_chain_name, &rule_string).unwrap();
+        match ipt.append_unique("filter", &profile_chain_name, &rule_string)
+        {
+            Ok(_) => println!("\tAdded succesfully."),
+            Err(e) => println!("\tCould not add rule: {}", e),
+        }
         //TODO: Will I need to LOG here or something to count bytes for intermediate accesses?
 
         // TODO: This is a little inefficient in execution, but much more efficient
         // for me as the programmer right now.
         // If there is not a rule in the 'FORWARD' chain that checks this chain for each source IP, add it.
-        ipt.append_unique("filter", "FORWARD", format!("-s {} -j {}", src, &profile_chain_name).as_str()).unwrap();
+        if last_src != src.to_string() {
+            match ipt.append_unique("filter", "FORWARD", format!("-s {} -j {}", src, &profile_chain_name).as_str()) {
+                Ok(_) => println!("\tWas able to add new chain."),
+                Err(e) => eprintln!("\tCould not add chain: {}", e),
+            }
+            last_src = src.clone();
+        }
     }
     Ok(())
 }

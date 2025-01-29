@@ -93,9 +93,11 @@ impl ConfigOptions {
 
         config_options.websites = websites_address_table.websites;
 
-        config_options
-    }
-    pub fn init(&mut self) {
+        // Now init all of the block profiles with their names
+        for (name, profile) in config_options.blockprofiles.iter_mut() {
+            profile.name = name.clone();
+        }
 
+        config_options
     }
 }
